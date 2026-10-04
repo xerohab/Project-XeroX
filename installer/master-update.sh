@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [ "${1:-}" = "--plan" ]; then
-    exec "$ROOT/installer/plan-deployment.sh"
+    exec "$ROOT/installer/plan-isolated.sh"
 fi
 
 source "$ROOT/manifest/master.conf"

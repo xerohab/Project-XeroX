@@ -8,6 +8,13 @@ RENDERER="${RENDERER_ROOT:-/var/www/Nitro_Render_V3}"
 EMULATOR="${EMULATOR_ROOT:-/var/www/emulator}"
 CMS="${CMS_ROOT:-/var/www/atomcms}"
 
+STAGING_ROOT="${STAGING_ROOT:-}"
+
+if [ -z "$STAGING_ROOT" ]; then
+    echo "ERROR: STAGING_ROOT not supplied"
+    exit 1
+fi
+
 REPORT_DIR="${REPORT_DIR:-$ROOT/reports}"
 
 mkdir -p "$REPORT_DIR"
@@ -54,25 +61,25 @@ compare()
 
 compare \
     NITRO \
-    "$ROOT/staging/nitro" \
+    "$STAGING_ROOT/nitro" \
     "$NITRO" \
     "$ROOT/manifest/protection/nitro.txt"
 
 compare \
     RENDERER \
-    "$ROOT/staging/renderer" \
+    "$STAGING_ROOT/renderer" \
     "$RENDERER" \
     "$ROOT/manifest/protection/renderer.txt"
 
 compare \
     EMULATOR \
-    "$ROOT/staging/emulator" \
+    "$STAGING_ROOT/emulator" \
     "$EMULATOR" \
     "$ROOT/manifest/protection/emulator.txt"
 
 compare \
     CMS \
-    "$ROOT/staging/cms" \
+    "$STAGING_ROOT/cms" \
     "$CMS" \
     "$ROOT/manifest/protection/cms.txt" \
     selective
