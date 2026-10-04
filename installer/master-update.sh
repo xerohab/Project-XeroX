@@ -3,6 +3,10 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+if [ "${1:-}" = "--plan" ]; then
+    exec "$ROOT/installer/plan-deployment.sh"
+fi
+
 source "$ROOT/manifest/master.conf"
 
 MODE="dry-run"
