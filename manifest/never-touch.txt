@@ -1,23 +1,50 @@
-# PROJECT XEROX HARD PROTECTION LIST
+# ============================================================
+# Project XeroX — HARD DESTINATION PROTECTION
+# ============================================================
 #
-# The installer must not modify these systems.
+# These are destination-owned systems/data.
+# The master updater must not replace them with another hotel's values.
+#
+# Application CODE is governed separately:
+#
+#   Nitro     = managed
+#   Renderer  = managed
+#   Emulator  = managed
+#   CMS       = selective
+#   Gamedata  = separate Project XeroX Gamedata project
+#
+# Therefore Renderer/Emulator/CMS application code is NOT globally
+# "never touch". Their destination-specific state remains protected.
 
-CMS
+# Persistent data
 database
+catalogue database
 gamedata
-renderer
-emulator
+
+# Secrets / environment
+environment files
+credentials
+secrets
+
+# Destination configuration
 hotel configuration
 connection configuration
-landing screen
-loading screen
-login screen
+runtime configuration
+server configuration
+
+# Destination identity / entry experience
 hotel branding
 hotel logo
 hotel name
-catalogue database
-runtime configuration
-environment files
-mobile interface
+landing screen
+loading screen
+login screen
 
-# Project XeroX is an IN-HOTEL Nitro desktop UI package.
+# Persistent website/runtime content
+uploads
+storage
+logs
+
+# Destination-specific interfaces/customisations unless an explicit
+# Project XeroX migration declares ownership.
+mobile interface
