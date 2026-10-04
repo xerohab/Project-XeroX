@@ -59,6 +59,28 @@ xerox_capture_nitro_runtime_config()
     done < "$manifest"
 }
 
+xerox_json_semantically_equal()
+{
+    local left="$1"
+    local right="$2"
+
+    xerox_validate_json "$left" || return 1
+    xerox_validate_json "$right" || return 1
+
+    python3 - "$left" "$right" <<'PYJSON'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as f:
+    left = json.load(f)
+
+with open(sys.argv[2], "r", encoding="utf-8") as f:
+    right = json.load(f)
+
+raise SystemExit(0 if left == right else 1)
+PYJSON
+}
+
 xerox_restore_nitro_runtime_config()
 {
     local save="$1"
@@ -122,12 +144,12 @@ xerox_verify_nitro_runtime_config()
         xerox_validate_json "$src" || return 1
         xerox_validate_json "$dst" || return 1
 
-        if ! cmp -s "$src" "$dst"; then
-            xerox_die "Destination runtime config was not preserved: $file"
+        if ! xerox_json_semantically_equal "$src" "$dst"; then
+            xerox_die "Destination runtime config semantics changed: $file"
             return 1
         fi
 
-        echo "CONFIG MATCH: $file"
+        echo "CONFIG SEMANTIC MATCH: $file"
     done < "$manifest"
 }
 

@@ -1,0 +1,7 @@
+# Destination-specific Renderer integration points.
+#
+# These are preserved because destination hotels may use custom currency
+# names / Lounge Points integration here.
+
+src/api/asset/logic/model/IAssetLogicData.ts
+src/api/asset/logic/furniture/FurnitureCreditLogic.ts

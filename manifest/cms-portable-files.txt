@@ -1,0 +1,7 @@
+# Project XeroX explicitly portable CMS files.
+#
+# CMS is never bulk replaced. Only paths listed here may be deployed
+# automatically from the approved CMS release.
+
+public/habbicons/default/habbicons.json
+public/habbicons/default/habbicons.png
