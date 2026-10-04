@@ -36,11 +36,24 @@ echo "  Managed separately"
 echo
 
 if [ "$MODE" = "install" ]; then
-    echo "INSTALL MODE IS NOT ENABLED YET."
-    echo
-    echo "This protection is intentional."
-    echo "The deployment engine must be completed and validated first."
-    exit 1
+    PROFILE="${2:-}"
+
+    [ -n "$PROFILE" ] || {
+        echo "ERROR: destination profile required"
+        exit 1
+    }
+
+    [ "${3:-}" = "--confirm" ] || {
+        echo "ERROR: explicit --confirm required"
+        exit 1
+    }
+
+    [ "${4:-}" = "PROJECT-XEROX-PRODUCTION-UPDATE" ] || {
+        echo "ERROR: invalid production confirmation"
+        exit 1
+    }
+
+    exec "$ROOT/installer/production-update.sh"         --install         "$PROFILE"         --confirm         PROJECT-XEROX-PRODUCTION-UPDATE
 fi
 
 echo "===== SAFETY POLICY ====="

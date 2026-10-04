@@ -3,6 +3,30 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+if [ "${1:-}" = "--install" ]; then
+    PROFILE="${2:-}"
+
+    [ -n "$PROFILE" ] || {
+        echo "ERROR: destination profile required"
+        exit 1
+    }
+
+    [ "${3:-}" = "--confirm" ] || {
+        echo "ERROR: explicit --confirm required"
+        exit 1
+    }
+
+    [ "${4:-}" = "PROJECT-XEROX-PRODUCTION-UPDATE" ] || {
+        echo "ERROR: invalid production confirmation"
+        exit 1
+    }
+
+    exec "$ROOT/installer/production-execute.sh" \
+        "$PROFILE" \
+        PROJECT-XEROX-PRODUCTION-UPDATE
+fi
+
+
 MODE="${1:-}"
 PROFILE="${2:-}"
 
