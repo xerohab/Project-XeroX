@@ -1,0 +1,5 @@
+# Destination/runtime/generated Renderer paths
+.env
+.env.*
+node_modules/
+dist/

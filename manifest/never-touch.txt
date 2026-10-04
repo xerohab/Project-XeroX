@@ -1,0 +1,23 @@
+# PROJECT XEROX HARD PROTECTION LIST
+#
+# The installer must not modify these systems.
+
+CMS
+database
+gamedata
+renderer
+emulator
+hotel configuration
+connection configuration
+landing screen
+loading screen
+login screen
+hotel branding
+hotel logo
+hotel name
+catalogue database
+runtime configuration
+environment files
+mobile interface
+
+# Project XeroX is an IN-HOTEL Nitro desktop UI package.

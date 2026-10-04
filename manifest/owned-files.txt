@@ -1,0 +1,14 @@
+# Files Project XeroX owns and may install/update.
+
+src/components/ui2/
+src/css/ui2/UI2.css
+
+src/components/avatar-editor/AvatarEditorUI2ModelView.tsx
+src/components/avatar-editor/AvatarEditorUI2View.tsx
+
+# Xerox radio implementation.
+src/components/radio/RadioView.tsx
+src/css/radio/RadioView.css
+
+# AvatarEditorSelectorView.tsx is handled specially by the installer.
+# It switches the wardrobe/editor entry point to Xerox UI2.

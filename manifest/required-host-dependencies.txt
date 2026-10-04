@@ -1,0 +1,34 @@
+# Project XeroX host dependencies.
+#
+# These belong to the destination Nitro installation.
+# Project XeroX uses them but MUST NOT overwrite them merely because
+# Xerox imports them.
+
+src/api
+src/common
+src/hooks
+
+# Existing Nitro media player.
+# May be .ts or .tsx depending on compatible Nitro version.
+src/components/youtube/YoutubeReactPlayer
+
+src/components/avatar-editor/AvatarEditorIcon
+src/components/avatar-editor/AvatarEditorFigurePreviewView
+src/components/avatar-editor/AvatarEditorPetView
+src/components/avatar-editor/AvatarEditorWardrobeView
+src/components/avatar-editor/figure-set
+src/components/avatar-editor/palette-set
+
+src/assets/images/avatareditor/air/main-generic.png
+src/assets/images/avatareditor/air/main-head.png
+src/assets/images/avatareditor/air/main-legs.png
+src/assets/images/avatareditor/air/main-misc.png
+src/assets/images/avatareditor/air/main-torso.png
+
+src/assets/images/habbicons
+src/assets/images/wardrobe/pets.png
+
+src/assets/images/hc-center/hc_logo.gif
+src/assets/images/purse/air/credits.png
+src/assets/images/purse/air/diamond.png
+src/assets/images/purse/air/duckets.png

@@ -1,0 +1,8 @@
+# Project XeroX master update order
+
+renderer
+emulator
+nitro
+cms-selective
+xerox-ui
+validation

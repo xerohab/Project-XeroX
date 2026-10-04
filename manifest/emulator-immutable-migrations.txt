@@ -1,0 +1,7 @@
+# Historical Flyway migrations are immutable.
+#
+# Project XeroX must never overwrite an existing destination migration with
+# different bytes. New migrations may be introduced, but an existing filename
+# must match byte-for-byte before deployment continues.
+
+Emulator/src/main/resources/db/migration/

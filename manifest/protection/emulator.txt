@@ -1,0 +1,6 @@
+# Destination-owned Emulator paths/data/config
+.env
+.env.*
+Emulator/data/
+data/
+logs/

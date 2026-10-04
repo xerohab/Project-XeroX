@@ -1,0 +1,12 @@
+# Existing destination files.
+#
+# Project XeroX must PATCH these rather than replacing the destination
+# hotel's complete files.
+
+src/App.tsx
+src/index.tsx
+src/components/MainView.tsx
+src/components/friends/FriendsView.tsx
+src/components/room/widgets/chat-input/ChatInputView.tsx
+src/components/avatar-editor/AvatarEditorSelectorView.tsx
+src/css/icons/icons.css

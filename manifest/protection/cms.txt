@@ -1,0 +1,10 @@
+# CMS is SELECTIVE. These paths are never bulk replaced.
+.env
+.env.*
+storage/
+vendor/
+node_modules/
+public/uploads/
+public/storage/
+resources/views/
+resources/themes/

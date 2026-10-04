@@ -1,0 +1,13 @@
+# Project XeroX must NEVER overwrite these areas.
+
+public/
+dist/
+node_modules/
+
+# Hotel infrastructure
+.env
+.env.*
+configuration/
+config/
+
+# Landing/loading/CMS/database/gamedata are outside Project XeroX scope.

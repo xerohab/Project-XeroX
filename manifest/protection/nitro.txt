@@ -1,0 +1,9 @@
+# Destination-owned Nitro paths/patterns
+.env
+.env.*
+dist/
+node_modules/
+src/assets/images/loading/
+src/assets/images/landing/
+src/assets/images/login/
+public/

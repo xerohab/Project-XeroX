@@ -1,0 +1,85 @@
+# ============================================================
+# Project XeroX
+# Never commit destination/server-specific state
+# ============================================================
+
+# Release staging/checkouts
+/staging/
+
+# Generated reports
+/reports/
+
+# Backups
+*.backup
+*.backup-*
+*.bak
+*.orig
+*.rej
+*~
+backup/
+backups/
+
+# Environment / credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.token
+credentials*
+secrets*
+
+# Runtime/generated data
+node_modules/
+vendor/
+dist/
+target/
+build/
+coverage/
+logs/
+*.log
+*.pid
+
+# IDE/editor/OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Database dumps
+*.sql
+*.sql.gz
+*.dump
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+
+# Hotel-specific runtime configuration must never become
+# Project XeroX source material.
+**/public/configuration/client-mode.json
+**/public/configuration/renderer-config.json
+**/public/configuration/ui-config.json
+
+# Project XeroX deployment captures
+.runtime-config/
+deployment-backups/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class

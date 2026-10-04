@@ -1,0 +1,12 @@
+# Destination-owned Nitro runtime configuration.
+#
+# These files are preserved from the destination hotel's public/configuration
+# and re-installed into the newly deployed dist/configuration.
+#
+# Never source these files from another hotel.
+
+client-mode.json
+renderer-config.json
+ui-config.json
+hotlooks.json
+infostand_backgrounds.json

@@ -1,0 +1,58 @@
+# ============================================================
+# Project XeroX — protected destination content
+# ============================================================
+#
+# The master updater must preserve these categories unless a
+# future migration explicitly declares otherwise.
+#
+
+# ------------------------------------------------------------
+# SECRETS
+# ------------------------------------------------------------
+
+.env
+.env.*
+credentials
+secrets
+
+# ------------------------------------------------------------
+# HOTEL IDENTITY
+# ------------------------------------------------------------
+
+hotel-name
+hotel-logo
+branding
+site-name
+
+# ------------------------------------------------------------
+# CLIENT ENTRY EXPERIENCE
+# ------------------------------------------------------------
+
+landing
+landingview
+login
+loading
+
+# ------------------------------------------------------------
+# DESTINATION CONFIGURATION
+# ------------------------------------------------------------
+
+connection-config
+runtime-config
+server-config
+
+# ------------------------------------------------------------
+# PERSISTENT DATA
+# ------------------------------------------------------------
+
+database
+uploads
+storage
+logs
+
+# ------------------------------------------------------------
+# GAMEDATA
+# ------------------------------------------------------------
+
+# Managed separately by Project XeroX Gamedata.
+gamedata
