@@ -10,11 +10,15 @@ xerox_validate_json()
 {
     local file="$1"
 
-    [ -s "$file" ] ||
+    if [ ! -s "$file" ]; then
         xerox_die "Missing/empty JSON: $file"
+        return 1
+    fi
 
-    python3 -m json.tool "$file" >/dev/null ||
+    if ! python3 -m json.tool "$file" >/dev/null 2>&1; then
         xerox_die "Invalid JSON: $file"
+        return 1
+    fi
 }
 
 xerox_capture_nitro_runtime_config()
@@ -22,13 +26,14 @@ xerox_capture_nitro_runtime_config()
     local nitro="$1"
     local save="$2"
     local manifest="$3"
-
     local src="$nitro/public/configuration"
 
-    [ -d "$src" ] ||
+    if [ ! -d "$src" ]; then
         xerox_die "Destination Nitro configuration missing: $src"
+        return 1
+    fi
 
-    mkdir -p "$save"
+    mkdir -p "$save" || return 1
 
     while IFS= read -r file
     do
@@ -36,18 +41,21 @@ xerox_capture_nitro_runtime_config()
             ""|\#*) continue ;;
         esac
 
-        [ -s "$src/$file" ] ||
+        if [ ! -s "$src/$file" ]; then
             xerox_die "Required destination runtime config missing: $src/$file"
+            return 1
+        fi
 
-        xerox_validate_json "$src/$file"
+        xerox_validate_json "$src/$file" || return 1
 
-        install -m 0644 "$src/$file" "$save/$file"
+        install -m 0644 "$src/$file" "$save/$file" || return 1
 
-        cmp -s "$src/$file" "$save/$file" ||
+        if ! cmp -s "$src/$file" "$save/$file"; then
             xerox_die "Runtime config capture mismatch: $file"
+            return 1
+        fi
 
         echo "CAPTURED: $file"
-
     done < "$manifest"
 }
 
@@ -56,11 +64,12 @@ xerox_restore_nitro_runtime_config()
     local save="$1"
     local nitro="$2"
     local manifest="$3"
-
     local dst="$nitro/dist/configuration"
 
-    [ -d "$dst" ] ||
+    if [ ! -d "$dst" ]; then
         xerox_die "Built Nitro configuration directory missing: $dst"
+        return 1
+    fi
 
     while IFS= read -r file
     do
@@ -68,18 +77,21 @@ xerox_restore_nitro_runtime_config()
             ""|\#*) continue ;;
         esac
 
-        [ -s "$save/$file" ] ||
+        if [ ! -s "$save/$file" ]; then
             xerox_die "Captured runtime config missing: $file"
+            return 1
+        fi
 
-        xerox_validate_json "$save/$file"
+        xerox_validate_json "$save/$file" || return 1
 
-        install -m 0644 "$save/$file" "$dst/$file"
+        install -m 0644 "$save/$file" "$dst/$file" || return 1
 
-        cmp -s "$save/$file" "$dst/$file" ||
+        if ! cmp -s "$save/$file" "$dst/$file"; then
             xerox_die "Runtime config restore mismatch: $file"
+            return 1
+        fi
 
         echo "RESTORED: $file"
-
     done < "$manifest"
 }
 
@@ -97,28 +109,124 @@ xerox_verify_nitro_runtime_config()
         local src="$nitro/public/configuration/$file"
         local dst="$nitro/dist/configuration/$file"
 
-        [ -s "$src" ] ||
+        if [ ! -s "$src" ]; then
             xerox_die "Public runtime config missing after deploy: $file"
+            return 1
+        fi
 
-        [ -s "$dst" ] ||
+        if [ ! -s "$dst" ]; then
             xerox_die "Dist runtime config missing after deploy: $file"
+            return 1
+        fi
 
-        xerox_validate_json "$dst"
+        xerox_validate_json "$src" || return 1
+        xerox_validate_json "$dst" || return 1
 
-        cmp -s "$src" "$dst" ||
+        if ! cmp -s "$src" "$dst"; then
             xerox_die "Destination runtime config was not preserved: $file"
+            return 1
+        fi
 
         echo "CONFIG MATCH: $file"
-
     done < "$manifest"
+}
+
+xerox_validate_nitro_api_contract()
+{
+    local nitro="$1"
+
+    local client="$nitro/dist/configuration/client-mode.json"
+    local renderer="$nitro/dist/configuration/renderer-config.json"
+
+    xerox_validate_json "$client" || return 1
+    xerox_validate_json "$renderer" || return 1
+
+    python3 - "$client" "$renderer" <<'PY'
+import json
+import sys
+from urllib.parse import urlparse
+
+client_path, renderer_path = sys.argv[1], sys.argv[2]
+
+with open(client_path, encoding="utf-8") as f:
+    client = json.load(f)
+
+with open(renderer_path, encoding="utf-8") as f:
+    renderer = json.load(f)
+
+def find_key(obj, wanted):
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key == wanted:
+                return value
+            found = find_key(value, wanted)
+            if found is not None:
+                return found
+    elif isinstance(obj, list):
+        for value in obj:
+            found = find_key(value, wanted)
+            if found is not None:
+                return found
+    return None
+
+api_base = find_key(client, "apiBaseUrl")
+api_url = find_key(renderer, "api.url")
+
+if api_url is None:
+    api_section = find_key(renderer, "api")
+    if isinstance(api_section, dict):
+        api_url = api_section.get("url")
+
+def valid_endpoint(value):
+    if not isinstance(value, str) or not value.strip():
+        return False
+
+    value = value.strip()
+
+    if "${" in value:
+        return False
+
+    parsed = urlparse(value)
+
+    if parsed.scheme in ("http", "https"):
+        return bool(parsed.netloc)
+
+    # Relative API roots such as /api are acceptable.
+    return value.startswith("/")
+
+if api_base is not None and not valid_endpoint(api_base):
+    print(
+        f"PROJECT XEROX ERROR: invalid client apiBaseUrl: {api_base!r}",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+if not valid_endpoint(api_url):
+    print(
+        f"PROJECT XEROX ERROR: missing/invalid renderer api.url: {api_url!r}",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+print(f"PASS: renderer api.url={api_url}")
+
+if api_base is None:
+    print("INFO: client-mode.json does not define apiBaseUrl")
+else:
+    print(f"PASS: client apiBaseUrl={api_base}")
+PY
 }
 
 xerox_verify_http_config()
 {
     local domain="$1"
     local manifest="$2"
+    local scheme="${3:-https}"
+    local address="${4:-127.0.0.1}"
+    local base_path="${5:-/client/configuration}"
+
     local tmp
-    tmp="$(mktemp)"
+    tmp="$(mktemp)" || return 1
 
     while IFS= read -r file
     do
@@ -128,49 +236,36 @@ xerox_verify_http_config()
 
         local code
 
-        code="$(
+        if ! code="$(
             curl -ksS \
+                --connect-timeout 10 \
+                --max-time 30 \
                 -o "$tmp" \
                 -w '%{http_code}' \
                 -H "Host: $domain" \
-                "https://127.0.0.1/client/configuration/$file"
-        )"
+                "$scheme://$address$base_path/$file"
+        )"; then
+            rm -f "$tmp"
+            xerox_die "HTTP request failed for $file"
+            return 1
+        fi
 
-        [ "$code" = "200" ] ||
-        {
+        if [ "$code" != "200" ]; then
             rm -f "$tmp"
             xerox_die "$file returned HTTP $code"
             return 1
-        }
+        fi
 
-        python3 -m json.tool "$tmp" >/dev/null ||
-        {
+        if ! python3 -m json.tool "$tmp" >/dev/null 2>&1; then
             rm -f "$tmp"
             xerox_die "$file did not return valid JSON"
             return 1
-        }
+        fi
 
         echo "HTTP 200 JSON: $file"
-
     done < "$manifest"
 
     rm -f "$tmp"
-}
-
-xerox_check_unresolved_runtime_placeholders()
-{
-    local nitro="$1"
-
-    if grep -RIl \
-        --include='*.json' \
-        -E '\$\{(api\.url|apiBaseUrl)\}' \
-        "$nitro/dist/configuration" \
-        2>/dev/null
-    then
-        xerox_die "Unresolved API placeholder found in deployed runtime JSON"
-    fi
-
-    echo "PASS: no unresolved API placeholders in runtime JSON"
 }
 
 xerox_verify_immutable_migrations()
@@ -182,11 +277,15 @@ xerox_verify_immutable_migrations()
     local src="$staged/$rel"
     local dst="$destination/$rel"
 
-    [ -d "$src" ] ||
+    if [ ! -d "$src" ]; then
         xerox_die "Staged migration directory missing: $src"
+        return 1
+    fi
 
-    [ -d "$dst" ] ||
+    if [ ! -d "$dst" ]; then
         xerox_die "Destination migration directory missing: $dst"
+        return 1
+    fi
 
     local failures=0
 
@@ -195,16 +294,16 @@ xerox_verify_immutable_migrations()
         local name
         name="$(basename "$file")"
 
-        if [ -f "$dst/$name" ] && ! cmp -s "$file" "$dst/$name"
-        then
+        if [ -f "$dst/$name" ] && ! cmp -s "$file" "$dst/$name"; then
             echo "IMMUTABILITY FAILURE: $name" >&2
             failures=$((failures + 1))
         fi
-
     done < <(find "$src" -maxdepth 1 -type f -name 'V*.sql' -print0)
 
-    [ "$failures" -eq 0 ] ||
+    if [ "$failures" -ne 0 ]; then
         xerox_die "$failures historical migration(s) differ from destination"
+        return 1
+    fi
 
     echo "PASS: existing Flyway migration history is immutable"
 }
@@ -212,6 +311,12 @@ xerox_verify_immutable_migrations()
 xerox_reject_staging_junk()
 {
     local stage="$1"
+
+    if [ ! -d "$stage" ]; then
+        xerox_die "Staging directory missing: $stage"
+        return 1
+    fi
+
     local failures=0
 
     while IFS= read -r -d '' file
@@ -225,11 +330,12 @@ xerox_reject_staging_junk()
                 failures=$((failures + 1))
                 ;;
         esac
-
     done < <(find "$stage" -type f -print0)
 
-    [ "$failures" -eq 0 ] ||
+    if [ "$failures" -ne 0 ]; then
         xerox_die "$failures backup/junk file(s) detected in staging"
+        return 1
+    fi
 
     echo "PASS: no recognised backup/junk files in staging"
 }

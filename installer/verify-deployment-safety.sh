@@ -2,51 +2,70 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
 source "$ROOT/installer/lib/deployment-safety.sh"
 
 RUNTIME="$ROOT/manifest/nitro-runtime-config.txt"
+NITRO="${NITRO_ROOT:-/var/www/Nitro-V3}"
 
 echo "============================================================"
 echo "PROJECT XEROX — DEPLOYMENT SAFETY VERIFICATION"
-echo "READ-ONLY AGAINST LIVE COMPONENTS"
+echo "READ ONLY"
 echo "============================================================"
 
 echo
-echo "===== MANIFEST ====="
+echo "===== RUNTIME CONFIG CONTRACT ====="
 
 test -s "$RUNTIME"
 
-grep -q '^client-mode.json$' "$RUNTIME"
-grep -q '^renderer-config.json$' "$RUNTIME"
-grep -q '^ui-config.json$' "$RUNTIME"
-
-echo "PASS: runtime configuration contract"
+for file in \
+    client-mode.json \
+    renderer-config.json \
+    ui-config.json \
+    hotlooks.json \
+    infostand_backgrounds.json
+do
+    grep -qx "$file" "$RUNTIME"
+    echo "PASS: $file protected"
+done
 
 echo
-echo "===== STAGING JUNK ====="
+echo "===== FAILURE PROPAGATION SELF-TEST ====="
 
-# Report this separately for now. Existing historical staging may contain junk;
-# verification must expose it without deleting anything.
-if xerox_reject_staging_junk "$ROOT/staging"
-then
-    echo "PASS: staging cleanliness"
-else
-    echo "WARN: staging currently contains historical junk"
-    echo "      Nothing has been deleted."
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+mkdir -p "$TMP/stage"
+touch "$TMP/stage/test.backup-123"
+
+if xerox_reject_staging_junk "$TMP/stage" >/dev/null 2>&1; then
+    echo "ERROR: junk rejection incorrectly returned success"
+    exit 1
 fi
 
-echo
-echo "===== NITRO CONFIG ====="
+echo "PASS: safety failures propagate correctly"
 
-if [ -d /var/www/Nitro-V3/public/configuration ] &&
-   [ -d /var/www/Nitro-V3/dist/configuration ]
-then
-    xerox_verify_nitro_runtime_config \
-        /var/www/Nitro-V3 \
-        "$RUNTIME"
+echo
+echo "===== LIVE NITRO OBSERVATION ====="
+
+if [ -d "$NITRO/public/configuration" ] &&
+   [ -d "$NITRO/dist/configuration" ]; then
+
+    if xerox_verify_nitro_runtime_config "$NITRO" "$RUNTIME"; then
+        echo "PASS: current public/dist runtime config match"
+
+        if xerox_validate_nitro_api_contract "$NITRO"; then
+            echo "PASS: current Nitro API contract"
+        else
+            echo "WARN: current Nitro API contract requires attention"
+            echo "      No files were changed."
+        fi
+    else
+        echo "WARN: current public/dist runtime config differ"
+        echo "      This verifier is observational before deployment."
+        echo "      Deployment must capture public config and restore it into dist."
+    fi
 else
-    echo "SKIP: live Nitro dist/public contract unavailable on this server"
+    echo "SKIP: live Nitro public/dist configuration unavailable"
 fi
 
 echo
@@ -62,8 +81,8 @@ done
 
 echo
 echo "============================================================"
-echo "SAFETY LAYER CREATED"
+echo "SAFETY VERIFICATION COMPLETE"
 echo "NO HOTEL FILES CHANGED"
-echo "NO BUILD PERFORMED"
-echo "NO SERVICE RESTARTED"
+echo "NO BUILD"
+echo "NO SERVICE RESTART"
 echo "============================================================"
