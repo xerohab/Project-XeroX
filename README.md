@@ -211,13 +211,12 @@ Before performing a real production installation, always run planning, productio
 
 The production installation command requires an explicit destination profile, the `--confirm` option and the exact production confirmation token:
 
-```bash id="b4uzbn"
+```bash
 installer/production-update.sh \
     --install \
     /etc/project-xerox/myhotel.conf \
     --confirm \
     PROJECT-XEROX-PRODUCTION-UPDATE
-```
 
 The same guarded production installation can also be entered through `installer/master-update.sh`.
 
