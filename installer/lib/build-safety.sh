@@ -77,7 +77,7 @@ xerox_build_emulator()
     if [ -f "$project/pom.xml" ] && command -v mvn >/dev/null 2>&1; then
         (
             cd "$project"
-            mvn package
+            mvn clean package
         )
         return
     fi
