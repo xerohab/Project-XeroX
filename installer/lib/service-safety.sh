@@ -106,3 +106,36 @@ xerox_service_start()
             ;;
     esac
 }
+
+xerox_service_health()
+{
+    case "${SERVICE_MODE:-none}" in
+        systemd)
+            [ -n "${SERVICE_NAME:-}" ] || {
+                xerox_die "SERVICE_NAME is required for systemd health check"
+                return 1
+            }
+
+            systemctl is-active --quiet "$SERVICE_NAME" || {
+                xerox_die "Service is not active: $SERVICE_NAME"
+                return 1
+            }
+
+            echo "SERVICE=HEALTHY"
+            ;;
+
+        none)
+            [ "${ALLOW_NO_SERVICE_RESTART:-0}" = "1" ] || {
+                xerox_die "SERVICE_MODE=none requires ALLOW_NO_SERVICE_RESTART=1"
+                return 1
+            }
+
+            echo "SERVICE=HEALTHY"
+            ;;
+
+        *)
+            xerox_die "Unsupported SERVICE_MODE: ${SERVICE_MODE:-unset}"
+            return 1
+            ;;
+    esac
+}
