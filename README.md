@@ -14,7 +14,6 @@ The package is designed to:
 - preserve the destination hotel's configuration
 - back up files before modifying them
 - install only Xerox-required dependencies
-- avoid Solace-specific branding and unrelated customisations
 - support automated installation and updates
 
 ## Status
