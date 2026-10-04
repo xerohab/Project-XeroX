@@ -58,7 +58,6 @@ temp/
 *.temp
 
 # Database dumps
-*.sql
 *.sql.gz
 *.dump
 
@@ -83,3 +82,10 @@ deployment-backups/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Database dumps are rollback artifacts, never Project XeroX releases
+*.sql.gz
+*.sql.zst
+*.dump
+*.dump.gz
+database-backups/

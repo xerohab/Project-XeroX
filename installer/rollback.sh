@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT/manifest/master.conf"
 source "$ROOT/installer/lib/deployment-safety.sh"
+source "$ROOT/installer/lib/database-safety.sh"
 
 BACKUP="${1:-}"
 
@@ -23,6 +24,63 @@ fi
 
 # shellcheck disable=SC1090
 source "$BACKUP/backup.env"
+
+[ "${BACKUP_FORMAT:-0}" = "2" ] || {
+    xerox_die "Backup does not contain the required database rollback snapshot"
+    exit 1
+}
+
+[ "${DATABASE_INCLUDED:-0}" = "1" ] || {
+    xerox_die "Database rollback snapshot missing"
+    exit 1
+}
+
+[ "${DATABASE_ROLLBACK_ONLY:-0}" = "1" ] || {
+    xerox_die "Database snapshot is not marked rollback-only"
+    exit 1
+}
+
+[ "${CROSS_HOTEL_DATABASE_IMPORT:-1}" = "0" ] || {
+    xerox_die "Unsafe cross-hotel database policy in backup"
+    exit 1
+}
+
+[ -n "${DATABASE_NAME:-}" ] || {
+    xerox_die "Database name missing from backup metadata"
+    exit 1
+}
+
+[ -n "${DATABASE_BACKUP_PATH:-}" ] || {
+    xerox_die "Database backup path missing from backup metadata"
+    exit 1
+}
+
+[ -n "${DATABASE_DUMP_SHA256:-}" ] || {
+    xerox_die "Database checksum missing from backup metadata"
+    exit 1
+}
+
+# The database directory must belong to THIS backup transaction.
+EXPECTED_DATABASE_PATH="$BACKUP/database"
+
+[ "$DATABASE_BACKUP_PATH" = "$EXPECTED_DATABASE_PATH" ] || {
+    xerox_die "Database backup path escapes unified deployment snapshot"
+    exit 1
+}
+
+xerox_db_verify_backup "$DATABASE_BACKUP_PATH"
+
+ACTUAL_DATABASE_SHA256="$(
+    sha256sum "$DATABASE_BACKUP_PATH/database.sql" |
+    awk '{print $1}'
+)"
+
+[ "$ACTUAL_DATABASE_SHA256" = "$DATABASE_DUMP_SHA256" ] || {
+    xerox_die "Unified deployment database checksum mismatch"
+    exit 1
+}
+
+echo "PASS: deployment database snapshot verified"
 
 for name in nitro renderer emulator cms
 do
@@ -50,6 +108,10 @@ echo "Backup: $BACKUP"
 echo
 echo "Rollback is intentionally ARMED but not automatically executed"
 echo "by this standalone script without explicit --restore."
+echo
+echo "The database snapshot has been VERIFIED but is NOT automatically"
+echo "restored by --restore. Live database restore requires a separate"
+echo "explicit controlled database-restore gate."
 echo
 
 if [ "${2:-}" != "--restore" ]; then
@@ -111,4 +173,5 @@ restore_component cms "$CMS_ROOT"
 
 echo
 echo "PASS: rollback files restored"
+echo "NOTE: database was NOT restored"
 echo "NOTE: service restart remains a separate controlled operation"
