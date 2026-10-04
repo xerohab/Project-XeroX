@@ -97,6 +97,18 @@ done
 echo "PASS: transaction deployment engine"
 
 echo
+echo "===== PRODUCTION ORCHESTRATOR ====="
+
+[ -x "$ROOT/installer/production-orchestrator.sh" ] || {
+    xerox_die "Production orchestrator unavailable"
+    exit 1
+}
+
+"$ROOT/installer/production-orchestrator.sh"     --simulate     "$PROFILE"
+
+echo "PASS: production orchestrator simulation"
+
+echo
 echo "===== PRODUCTION RULES ====="
 
 echo "BACKUP BEFORE DEPLOYMENT=REQUIRED"

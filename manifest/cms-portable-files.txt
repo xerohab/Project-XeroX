@@ -4,4 +4,3 @@
 # automatically from the approved CMS release.
 
 public/habbicons/default/habbicons.json
-public/habbicons/default/habbicons.png
